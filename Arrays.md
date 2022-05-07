@@ -127,3 +127,66 @@ public:
  * int param_1 = obj->sumRegion(row1,col1,row2,col2);
  */
   ```
+
+
+
+## 560. 和为 K 的子数组
+
+给你一个整数数组 nums 和一个整数 k ，请你统计并返回 该数组中和为 k 的子数组的个数 。
+
+
+### example
+```
+示例 1：
+
+输入：nums = [1,1,1], k = 2
+输出：2
+示例 2：
+
+输入：nums = [1,2,3], k = 3
+输出：2
+
+
+提示：
+
+1 <= nums.length <= 2 * 104
+-1000 <= nums[i] <= 1000
+-107 <= k <= 107
+
+```
+
+### code
+link :  https://leetcode-cn.com/problems/subarray-sum-equals-k/submissions/
+```
+class Solution {
+public:
+
+// 定义前缀和，sumval[i]表示，前i个数字的和。
+// 又由于sumval-（sumval-k）=k，因此只需要统计多少个sumval-k即可。
+// 利用hash统计前缀和的个数。
+// 注意：
+// 当选择0个数字时，sumval[0]=0，hash[0]=1
+
+    
+    int subarraySum(vector<int>& nums, int k) {
+        int n = nums.size();
+        //前缀和
+        unordered_map<int,int> preSum;
+        preSum[0]=1;
+        int sumVal = 0;
+        int cnt = 0;
+
+        for(int v: nums){
+            sumVal += v;
+            
+            if(preSum.count(sumVal-k)){
+                cnt+=preSum[sumVal-k];
+            }
+            preSum[sumVal]+=1;
+        }
+
+
+        return cnt;
+    }
+};
+```
