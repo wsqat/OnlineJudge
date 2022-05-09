@@ -1,3 +1,8 @@
+https://codetop.cc/discuss/algo
+
+# 一. 前缀和专题
+> 前缀和主要适⽤的场景是原始数组不会被修改的情况下，频繁查询某个区间的累加和。
+
 ## 303. 区域和检索 - 数组不可变
 给定一个整数数组  nums，处理以下类型的多个查询:
 
@@ -187,6 +192,191 @@ public:
 
 
         return cnt;
+    }
+};
+```
+
+# 二. 差分和
+prefix[i] 就代表着 nums[0..i-1] 所有元素的累加和，如果我们想求区间 nums[i..j] 的累加和，只要
+计算 prefix[j+1] - prefix[i] 即可，⽽不需要遍历整个区间求和。
+本⽂讲⼀个和前缀和思想⾮常类似的算法技巧「差分数组」，差分数组的主要适⽤场景是频繁对原始数组的
+某个区间的元素进⾏增减。
+
+
+这⾥就需要差分数组的技巧，类似前缀和技巧构造的 prefix 数组，我们先对 nums 数组构造⼀个 diff 差
+分数组，diff[i] 就是 nums[i] 和 nums[i-1] 之差：
+
+```
+通过这个 diff 差分数组是可以反推出原始数组 nums 的，代码逻辑如下：
+int[] res = new int[diff.length];
+// 根据差分数组构造结果数组
+res[0] = diff[0];
+for (int i = 1; i < diff.length; i++) {
+ res[i] = res[i - 1] + diff[i];
+}
+这样构造差分数组 diff，就可以快速进⾏区间增减的操作，如果你想对区间 nums[i..j] 的元素全部加
+3，那么只需要让 diff[i] += 3，然后再让 diff[j+1] -= 3 即可：
+```
+
+原理很简单，回想 diff 数组反推 nums 数组的过程，diff[i] += 3 意味着给 nums[i..] 所有的元素都
+加了 3，然后 diff[j+1] -= 3 ⼜意味着对于 nums[j+1..] 所有元素再减 3，那综合起来，是不是就是对
+nums[i..j] 中的所有元素都加 3 了？
+只要花费 O(1) 的时间修改 diff 数组，就相当于给 nums 的整个区间做了修改。多次修改 diff，然后通过
+diff 数组反推，即可得到 nums 修改后的结果。
+
+```
+差分数组的性质这段话想了半天,终于理解了,为了仅仅让原数组下标在[l,r]区间内的元素值增加 inc
+
+首先需要将差分数组d[l]位置加 inc,这样下标 >= l 位置的元素都获得inc增量
+
+其次,为了不影响原数组中下标大于 r 的元素,需要在d[r + 1]处减去inc,使得原数组下标 > r 的元素值不变.
+```
+
+## 1109. 航班预订统计
+
+这里有 n 个航班，它们分别从 1 到 n 进行编号。
+
+有一份航班预订表 bookings ，表中第 i 条预订记录 bookings[i] = [firsti, lasti, seatsi] 意味着在从 firsti 到 lasti （包含 firsti 和 lasti ）的 每个航班 上预订了 seatsi 个座位。
+
+请你返回一个长度为 n 的数组 answer，里面的元素是每个航班预定的座位总数。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/corporate-flight-bookings
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+### example
+```
+示例 1：
+
+输入：bookings = [[1,2,10],[2,3,20],[2,5,25]], n = 5
+输出：[10,55,45,25,25]
+解释：
+航班编号        1   2   3   4   5
+预订记录 1 ：   10  10
+预订记录 2 ：       20  20
+预订记录 3 ：       25  25  25  25
+总座位数：      10  55  45  25  25
+因此，answer = [10,55,45,25,25]
+示例 2：
+
+输入：bookings = [[1,2,10],[2,2,15]], n = 2
+输出：[10,25]
+解释：
+航班编号        1   2
+预订记录 1 ：   10  10
+预订记录 2 ：       15
+总座位数：      10  25
+因此，answer = [10,25]
+ 
+
+提示：
+
+1 <= n <= 2 * 104
+1 <= bookings.length <= 2 * 104
+bookings[i].length == 3
+1 <= firsti <= lasti <= n
+1 <= seatsi <= 104
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/corporate-flight-bookings
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+### code
+```
+class Solution {
+public:
+    vector<int> corpFlightBookings(vector<vector<int>>& bookings, int n) {
+        vector<int> diff(n);
+        int m = bookings.size();
+        for(vector<int> book: bookings){
+            diff[book[0]-1] += book[2];
+            if (book[1]<n){
+                diff[book[1]] -= book[2];
+            }
+        }
+
+        for(int i=1;i<n;i++){
+            diff[i] += diff[i-1];
+        }
+        return diff;
+    }
+};
+
+
+复杂度分析
+
+时间复杂度：O(n+m)O(n+m)，其中 nn 为要求的数组长度，mm 为预定记录的数量。我们需要对于每一条预定记录处理一次差分数组，并最后对差分数组求前缀和。
+
+空间复杂度：O(1)O(1)。我们只需要常数的空间保存若干变量，注意返回值不计入空间复杂度
+
+作者：LeetCode-Solution
+链接：https://leetcode-cn.com/problems/corporate-flight-bookings/solution/hang-ban-yu-ding-tong-ji-by-leetcode-sol-5pv8/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+
+## 1094. 拼车
+
+车上最初有 capacity 个空座位。车 只能 向一个方向行驶（也就是说，不允许掉头或改变方向）
+
+给定整数 capacity 和一个数组 trips ,  trip[i] = [numPassengersi, fromi, toi] 表示第 i 次旅行有 numPassengersi 乘客，接他们和放他们的位置分别是 fromi 和 toi 。这些位置是从汽车的初始位置向东的公里数。
+
+当且仅当你可以在所有给定的行程中接送所有乘客时，返回 true，否则请返回 false。
+
+ 
+```
+示例 1：
+
+输入：trips = [[2,1,5],[3,3,7]], capacity = 4
+输出：false
+示例 2：
+
+输入：trips = [[2,1,5],[3,3,7]], capacity = 5
+输出：true
+ 
+
+提示：
+
+1 <= trips.length <= 1000
+trips[i].length == 3
+1 <= numPassengersi <= 100
+0 <= fromi < toi <= 1000
+1 <= capacity <= 105
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/car-pooling
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+### 解题思路
+```
+差分数组
+
+按照trips信息去构建一个数组，对应每个点乘客的变化
+从起点开始按照差分去计算当前乘客，超过capacity则直接返回
+```
+### code
+```
+class Solution {
+public:
+    bool carPooling(vector<vector<int>>& trips, int capacity) {
+        int m = 1001;
+        vector<int> diff(m);
+        for(auto& trip: trips){
+            diff[trip[1]] += trip[0];
+            diff[trip[2]] -= trip[0];
+        }
+        if(diff[0]>capacity)
+            return false;
+        
+        for(int i=1; i<m;i++){
+            diff[i] += diff[i-1];
+            if(diff[i]>capacity)
+                return false;
+        }
+        return true;
     }
 };
 ```
